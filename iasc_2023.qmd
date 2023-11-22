@@ -69,6 +69,8 @@ state_colors <- c(
   `Tasmania` = "#cc79a7",
   `Australian Capital Territory` = "#cccccc"
 )
+
+cairo_pdf("./figs/aus_map.pdf", width = 10, height = 6)
 read_sf("tourism/Tourism_Regions_2020.shp") |>
   rename(State = "STE_NAME16") |>
   ggplot() +
@@ -76,6 +78,7 @@ read_sf("tourism/Tourism_Regions_2020.shp") |>
   theme_void() +
   theme(text = ggplot2::element_text(family = 'Fira Sans')) +
   scale_fill_manual(values = state_colors)
+crop::dev.off.crop()
 ```
 
 \placefig{0.1}{1.2}{height=7.8cm, width=16cm}{aus_map}
@@ -184,7 +187,7 @@ crop::dev.off.crop()
 \only<2>{\placefig{0.1}{1.4}{width=15.8cm}{tourism2}}
 \only<3>{\placefig{0.1}{1.4}{width=15.8cm}{tourism3}}
 \only<4>{\placefig{0.1}{1.4}{width=15.8cm}{tourism4}}
-\only<5>{\placefig{0.1}{1.4}{width=15.8cm}{tourism5}}
+\only<5>{\placefig{0.1}{1.3}{width=15.8cm}{tourism5}}
 
 # Cross-temporal aggregation constraints
 
@@ -520,44 +523,6 @@ Suppose that $\left(\hat{\bm{y}}^{[1]},\ldots,\hat{\bm{y}}^{[L]}\right)$ is a sa
 * Reconcile the sample paths.
 * The reconciled sample paths are a sample from the reconciled distribution.
 
-## Simulation from a reconciled distribution
-
-```{r}
-#| label: sim_bootstrap
-#| include: false
-p <- tidyr::expand_grid(
-    time = seq(100),
-    series = seq(20)
-  ) |>
-  mutate(res = rnorm(n())) |>
-  ggplot(aes(x=time, y=series, fill=res)) +
-  geom_tile() +
-  scale_y_continuous(breaks = seq(20), minor_breaks = NULL, expand=c(0,0)) +
-  guides(fill = "none")
-Cairo::CairoPDF(file="figs/sim_bootstrap.pdf", width=8, height=4)
-  print(p)
-crop::dev.off.crop()
-slices <- sample(seq(100), replace = TRUE, size = 20)
-for(i in seq_along(slices)) {
-  Cairo::CairoPDF(file=paste0("figs/sim_bootstrap_", i, ".pdf"), width=8, height=4)
-    print(p +
-      geom_rect(aes(xmin = slices[i], xmax = slices[i]+0.9, ymin = 0.5, ymax = 20.5),
-                 fill = "transparent", col="white"))
-  crop::dev.off.crop()
-}
-```
-
-\vspace*{0.2cm}
-\centerline{\includegraphics[width=15.5cm]{figs/sim_bootstrap.pdf}}
-
-## Simulation from a reconciled distribution
-
-\vspace*{0.2cm}
-\centerline{
-\animategraphics[loop,autoplay,width=15.5cm]{10}{figs/sim_bootstrap_}{1}{20}
-}
-
-
 # Cross-temporal probabilistic forecast reconciliation
 
 ##  Cross-temporal probabilistic forecast reconciliation
@@ -786,7 +751,7 @@ The ``year'' can start in any quarter, giving overlapping blocks.
 \begin{textblock}{6}(0.2,1.2)
 \centering\fontsize{12}{13}\sf
 \textbf{Geographical division}\\
-\includegraphics[width = 5.5cm, trim= 0 0 180 0, clip=true]{fr_overview_files/figure-beamer/ausmap-1.pdf}\\[-0.4cm]
+\includegraphics[width = 5.5cm, trim= 0 0 180 0, clip=true]{figs/aus_map}\\[-0.4cm]
 \faTimes\\
 \textbf{Purpose of travel}\\
 {\fontsize{11}{12}\sf Holiday, Visiting friends \& relatives, Business, Other}

@@ -135,7 +135,7 @@
 \end{textblock}
 \begin{textblock}{4.2}(11.6,8.3)\pgfsetfillopacity{0.75}
 \begin{beamercolorbox}[wd=4.3cm,ht=0.35cm,dp=0.2cm]{block body}
-\fontsize{10}{10}\sf\color[RGB]{80,70,60}~~\texttt{\href{https://robjhyndman.com/ctprob}{robjhyndman.com/fr2023}}
+\fontsize{10}{10}\sf\color[RGB]{80,70,60}~~\texttt{\href{https://robjhyndman.com/ctprob}{robjhyndman.com/ctprob}}
 \end{beamercolorbox}
 \end{textblock}
 \begin{textblock}{6.2}(0,8.8)\pgfsetfillopacity{0.65}
@@ -324,7 +324,7 @@ forecasting}\label{australian-tourism-forecasting}
 \only<2>{\placefig{0.1}{1.4}{width=15.8cm}{tourism2}}
 \only<3>{\placefig{0.1}{1.4}{width=15.8cm}{tourism3}}
 \only<4>{\placefig{0.1}{1.4}{width=15.8cm}{tourism4}}
-\only<5>{\placefig{0.1}{1.4}{width=15.8cm}{tourism5}}
+\only<5>{\placefig{0.1}{1.3}{width=15.8cm}{tourism5}}
 \end{frame}
 
 \section{Cross-temporal aggregation
@@ -332,6 +332,8 @@ constraints}\label{cross-temporal-aggregation-constraints}
 
 \begin{frame}{Coherent cross-temporal forecasts}
 \phantomsection\label{coherent-cross-temporal-forecasts}
+\alert{What we want}
+
 \begin{itemize}
 \tightlist
 \item
@@ -341,7 +343,13 @@ constraints}\label{cross-temporal-aggregation-constraints}
   We want forecasts at monthly, quarterly, annual and other temporal
   aggregations.
 \item
-  We want ``coherent'' forecasts.
+  We want ``coherent'' probabilistic forecasts.
+\end{itemize}
+
+\alert{Solution}
+
+\begin{itemize}
+\tightlist
 \item
   We model and forecast all series independently.
 \item
@@ -353,32 +361,57 @@ constraints}\label{cross-temporal-aggregation-constraints}
 \phantomsection\label{notation}
 \fontsize{14}{15}\sf
 
-\alert{Cross-sectional aggregation:}
-
-\begin{itemize}
-\tightlist
-\item
-  \(\bm{b}_t=\) vector of most disaggregated series at time \(t\)
-\item
-  \(\by_t=\) vector of data for all series at time \(t\) (at highest
-  temporal disaggregation)
-\item
-  \(\bm{y}_t = \bm{S}_{cs}\bm{b}_t\), where \(\bm{S}\) is a
-  ``structural'' matrix defining the cross-sectional aggregations.
+\begin{textblock}{8.8}(0.2,1.5)
+\centerline{\colorbox[RGB]{210,210,210}{$\bY_{t}=\color{blue}\bS\color{red}\bm{b}_{t}$}}
+\begin{itemize}\parskip=0cm\itemsep=0cm
+\item $\by_t=$ vector of all series at time $t$
+\item $\color{red}{\bm{b}_t}=$ vector of most disaggregated series at time $t$
+\item $\color{blue}{\bS}=$ ``structural matrix'' containing the linear constraints.\\[1cm]
+\item $\bS_{cs}=$ cross-sectional aggregations.
+\item $\bS_{te}=$ temporal aggregations.
+\item $\bS_{ct} = \bS_{cs} \otimes \bS_{te}$.
 \end{itemize}
+\end{textblock}
 
-\alert{Temporal aggregation:}
+\begin{textblock}{5.7}(11.4,0.1)
+\begin{minipage}{4cm}
+\begin{block}{}\centering
+\begin{tikzpicture}
+\tikzstyle{every node}=[ellipse,draw,fill=red!15,inner sep=2pt]
+\tikzstyle[level distance=.3cm]
+\tikzstyle[sibling distance=12cm]
+\tikzstyle{level 1}=[sibling distance=10mm,font=\small,set style={{every node}+=[fill=blue!15]}]
+\node{Total}[edge from parent fork down]
+ child {node {A}
+ }
+ child {node {B}
+ }
+ child {node {C}
+ };
+\end{tikzpicture}
+\end{block}
+\end{minipage}
+\end{textblock}
 
-The same notation can apply for temporal aggregation with
-
-\begin{itemize}
-\tightlist
-\item
-  \(\bm{b}_\tau=\) vector of most disaggregated series in year \(\tau\)
-\item
-  \(\bm{y}_\tau = \bm{S}_{te}\) vector of all temporal aggregations in
-  year \(\tau\)
-\end{itemize}
+\begin{textblock}{5.7}(9.4,2.7)\fontsize{14}{15}\sf
+\begin{align*}
+\bY_{t}&= \begin{pmatrix}
+  y_{\text{Total},t}\\
+  y_{A,t}\\
+  y_{B,t}\\
+  y_{C,t}
+  \end{pmatrix}  \\
+  &= {\color{blue}\underbrace{\begin{pmatrix}
+                1 & 1 & 1 \\
+                1 & 0 & 0 \\
+                0 & 1 & 0\\
+                0 & 0 & 1
+                \end{pmatrix}}_{\bS}}
+     {\color{red}\underbrace{\begin{pmatrix}
+       y_{A,t}\\y_{B,t}\\y_{C,t}
+       \end{pmatrix}}_{\bm{b}_{t}}}
+\end{align*}
+\end{textblock}
 \end{frame}
 
 \begin{frame}{Temporal constraints: monthly data}
@@ -471,7 +504,7 @@ The same notation can apply for temporal aggregation with
     \bm{x}_\tau^{[1]}
   \end{bmatrix}
   \qquad
-  \bm{S} = \begin{bmatrix}
+  \bm{S}_{te} = \begin{bmatrix}
     1                & 1 & 1 & 1 & 1~~~1~~~1~~~1 & 1 & 1 & 1 & 1 \\
     1                & 1 & 1 & 1 & 1~~~1~~~0~~~0 & 0 & 0 & 0 & 0 \\
     0                & 0 & 0 & 0 & 0~~~0~~~1~~~1 & 1 & 1 & 1 & 1 \\
@@ -486,83 +519,15 @@ The same notation can apply for temporal aggregation with
     0                & 0 & 0 & 0 & 0~~~0~~~0~~~0 & 0 & 0 & 1 & 1 \\[0.2cm]
     \phantom{\vdots} &   &   &   & \bm{I}_{12}   &   &   &   &
   \end{bmatrix}
-\]
-\end{frame}
-
-\begin{frame}{Temporal constraints}
-\phantomsection\label{temporal-constraints}
-\fontsize{14}{15}\sf
-
-For a time series \(y_1,\dots,y_T\), observed at frequency \(m\):
-
-\begin{alertblock}{}\vspace*{-0.1cm}
-$$
-  x_j^{[k]} = \sum_{t = (j-1)k+1}^{jk} y_t\qquad \text{for $j = 1,\dots,\lfloor T/k\rfloor$}
-$$
-\end{alertblock}
-
-\begin{itemize}
-\tightlist
-\item
-  \(k \in \mathcal{K} = \{k_1,\dots,k_p\}\) denote the \(p\) factors of
-  \(m\) in ascending order, where \(k_1=1\) and \(k_p=m\)
-\item
-  \(x_j^{[1]} = y_t\)
-\item
-  A single unique hierarchy is only possible when there are no coprime
-  pairs in \(\mathcal{K}\).
-\item
-  \(M_k=m/k\) is seasonal period of aggregated series.
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Temporal constraints}
-\phantomsection\label{temporal-constraints-1}
-\fontsize{14}{15}\sf\vspace*{-0.5cm}
-
-\[\bm{x}_\tau = \bm{S} \bm{x}_\tau^{[1]}, \qquad \bm{S} = \begin{bmatrix}\bm{A}\\\bm{I}\end{bmatrix}\]
-where \[
-\bm{x}_\tau = \begin{bmatrix*}[l]
-    {x_\tau^{[k_p]}}\\
-    {\bm{x}_\tau^{[k_{p-1}]}}\\
-    \quad\vdots\\
-    {\bm{x}_\tau^{[k_1]}}\\
-  \end{bmatrix*}\qquad
-  \bm{x}_\tau^{[k]} = \begin{bmatrix*}[l]
-    x_{M_k(\tau-1)+1}^{[k]}\\
-    x_{M_k(\tau-1)+2}^{[k]}\\
-    \quad\vdots\\
-    x_{M_k\tau}^{[k]}
-  \end{bmatrix*}\qquad
-\bm{A} =
+  \qquad
+  \bm{b}_\tau = \bm{x}_{\tau}^{[1]} =
   \begin{bmatrix}
-    \bm{1}'_m                                    \\
-    \bm{I}_{m/k_{p-1}} \otimes \bm{1}'_{k_{p-1}} \\
-    \vdots                                       \\
-    \bm{I}_{m/k_{2}} \otimes \bm{1}'_{k_{2}}     \\
-  \end{bmatrix}
-\] \(\tau\) is time index for most aggregated series,
-
-\(k\in \mathcal{K} = \{k_1,\dots,k_p\}\),\quad \(k_1=1\),\quad \(k_p=m\),\quad \(\tau=1,\dots,T/m\).
-\end{frame}
-
-\begin{frame}{Cross-temporal constraints}
-\phantomsection\label{cross-temporal-constraints}
-\placefig{7.5}{1.3}{height=7.7cm, width=20cm}{Smatrix}
-
-\begin{textblock}{10}(0,1.2)
-\begin{itemize}\tightlist
-\item $\bm{S}_{cs}=$ structural cross-sectional matrix
-\item $\bm{S}_{te}=$ structural temporal matrix
-\item $\bm{S}_{ct} = \bm{S}_{cs} \otimes \bm{S}_{te}$
-\item $\bm{x}_\tau = \bm{S}_{ct} \bm{b}_\tau$\\[0.2cm]
-\item $\bm{b}_\tau = \begin{bmatrix}
-        {\bm{x}_{1,\tau}^{[1]}} \\
-        \vdots                  \\
-        {\bm{x}_{n,\tau}^{[1]}}
-      \end{bmatrix}.$
-\end{itemize}
-\end{textblock}
+   y_{12\tau -11} \\
+    y_{12\tau -10} \\
+    \vdots        \\
+    y_{12\tau}
+    \end{bmatrix}
+\]
 \end{frame}
 
 \section{Optimal linear forecast
@@ -588,7 +553,7 @@ Let $\hat{\bm{y}}_{t+h|t}$ be vector of \emph{incoherent} initial $h$-step forec
 \end{textblock}}
 \only<3>{\begin{textblock}{7.5}(8.3,6.75)\fontsize{13}{13}\sf
 \begin{alertblock}{Reconciled forecasts}
-Let $\psi$ be a mapping, $\psi:\mathbb{\chi}^n\rightarrow\mathfrak{s}$.  $\tilde{\bm{y}}_{t+h|t}=\psi(\hat{\bm{y}}_{t+h|t})$ ``reconciles'' $\hat{\bm{y}}_{t+h|t}$.
+Let $\bm{M}$ be a projection matrix. $\tilde{\bm{y}}_{t+h|t}=\bm{M}\hat{\bm{y}}_{t+h|t}$ ``reconciles'' $\hat{\bm{y}}_{t+h|t}$.
 \end{alertblock}
 \end{textblock}}
 
@@ -600,59 +565,32 @@ Let $\psi$ be a mapping, $\psi:\mathbb{\chi}^n\rightarrow\mathfrak{s}$.  $\tilde
 \end{textblock}
 \end{frame}
 
-\begin{frame}{Linear projection reconciliation}
-\phantomsection\label{linear-projection-reconciliation}
-\fontsize{14}{15}\sf
-\vspace*{0.2cm}\begin{alertblock}{}
-\centerline{$\tilde{\bm{y}}_{t+h|t}= \psi(\hat{\bm{y}}_{t+h|t}) = \bm{M}\hat{\bm{y}}_{t+h|t}$}
-\end{alertblock}\vspace*{-0.2cm}
-
-\begin{itemize}
-\tightlist
-\item
-  \(\hat{\bm{y}}_{t+h|t} =\) vector of incoherent ``base'' forecasts for
-  time \(t+h\) using data to time \(t\).
-\item
-  \(\tilde{\bm{y}}_{t+h|t} =\) vector of coherent ``reconciled''
-  forecasts for time \(t+h\) using data to time \(t\).
-\item
-  If \(\bm{S}\) forms a basis set for \(\mathfrak{s}\), then projections
-  are of the form \(\bm{M} = \bS(\bS'\bm{\Psi}\bS)^{-1}\bS'\bm{\Psi}\)
-  where \(\bm{\Psi}\) is a positive definite matrix.
-\item
-  Coherent base forecasts are unchanged since
-  \(\bm{M}\hat{\bm{y}}=\hat{\bm{y}}\)
-\item
-  If \(\hat{\bm{y}}\) is unbiased, then \(\tilde{\bm{y}}\) is also
-  unbiased.
-\item
-  \(\bm{W}_h = \var[\by_{T+h} - \hat{\by}_{T+h|T} \mid \by_1,\dots,\by_T]\)
-  is the covariance matrix of the base forecast errors.
-\item
-  \(\bm{V}_h = \var[\by_{T+h} - \tilde{\by}_{T+h|T} \mid \by_1,\dots,\by_T]) = \bm{M}\bm{W}_h\bm{M}'\)
-  is the covariance matrix of the reconciled forecast errors.
-\item
-  How to choose the best \(\bm{\Psi}\)?
-\end{itemize}
-
-\vspace*{10cm}
-\end{frame}
-
 \begin{frame}{Minimum trace reconciliation}
 \phantomsection\label{minimum-trace-reconciliation}
 \begin{textblock}{6.4}(9,-0.1)\begin{block}{}
 Wickramasuriya et al (2019)
 \end{block}\end{textblock}
 
-\vspace*{0.2cm}\begin{alertblock}{Minimum trace (MinT) reconciliation}
-If $\bm{M}$ is a projection, then trace of $\bm{V}_h$ is minimized when $\bm{\Psi} = \bm{W}_h$, so that
-\centerline{$\bm{M} = \bS(\bS'\bm{W}_h^{-1}\bS)^{-1}\bS'\bm{W}_h^{-1}$}
-\end{alertblock}
+\fontsize{14}{15}\sf
+
 \begin{block}{}
 \centerline{$\displaystyle\textcolor{red}{\tilde{\by}_{T+h|T}}
 = \bm{M} ~ \textcolor{blue}{\hat{\by}_{T+h|T}}$}
 \end{block}\vspace*{-0.2cm}
 \centerline{\hspace*{1.4cm}\textcolor{red}{Reconciled forecasts}\hfill\textcolor{blue}{Base forecasts}\hspace*{2.9cm}}\vspace*{-0.2cm}
+
+\begin{itemize}
+\tightlist
+\item
+  \(\bm{W}_h = \var[\by_{T+h} - \hat{\by}_{T+h|T} \mid \by_1,\dots,\by_T]\).
+\item
+  \(\bm{V}_h = \var[\by_{T+h} - \tilde{\by}_{T+h|T} \mid \by_1,\dots,\by_T]) = \bm{M}\bm{W}_h\bm{M}'\).
+\end{itemize}
+
+\begin{alertblock}{Minimum trace (MinT) reconciliation}
+If $\bm{M}$ is a projection, then trace of $\bm{V}_h$ is minimized when
+\centerline{$\bm{M} = \bS(\bS'\bm{W}_h^{-1}\bS)^{-1}\bS'\bm{W}_h^{-1}$}
+\end{alertblock}\vspace*{-0.2cm}
 
 \begin{itemize}
 \tightlist
@@ -696,7 +634,7 @@ Let $\hat{\bm{y}}_{t+h|t}$ be vector of \emph{incoherent} initial $h$-step forec
 
 \begin{textblock}{7.5}(8.3,6.75)\fontsize{13}{13}\sf
 \begin{alertblock}{Reconciled forecasts}
-Let $\psi$ be a mapping, $\psi:\mathbb{\chi}^n\rightarrow\mathfrak{s}$.  $\tilde{\bm{y}}_{t+h|t}=\psi(\hat{\bm{y}}_{t+h|t})$ ``reconciles'' $\hat{\bm{y}}_{t+h|t}$.
+$\tilde{\bm{y}}_{t+h|t}=\bm{M}\hat{\bm{y}}_{t+h|t}$ ``reconciles'' $\hat{\bm{y}}_{t+h|t}$.
 \end{alertblock}
 \end{textblock}
 
@@ -756,20 +694,6 @@ Suppose that $\left(\hat{\bm{y}}^{[1]},\ldots,\hat{\bm{y}}^{[L]}\right)$ is a sa
   The reconciled sample paths are a sample from the reconciled
   distribution.
 \end{itemize}
-\end{frame}
-
-\begin{frame}{Simulation from a reconciled distribution}
-\phantomsection\label{simulation-from-a-reconciled-distribution-1}
-\vspace*{0.2cm}
-\centerline{\includegraphics[width=15.5cm]{figs/sim_bootstrap.pdf}}
-\end{frame}
-
-\begin{frame}{Simulation from a reconciled distribution}
-\phantomsection\label{simulation-from-a-reconciled-distribution-2}
-\vspace*{0.2cm}
-\centerline{
-\animategraphics[loop,autoplay,width=15.5cm]{10}{figs/sim_bootstrap_}{1}{20}
-}
 \end{frame}
 
 \section{Cross-temporal probabilistic forecast
@@ -989,7 +913,7 @@ The ``year'' can start in any quarter, giving overlapping blocks.
 \begin{textblock}{6}(0.2,1.2)
 \centering\fontsize{12}{13}\sf
 \textbf{Geographical division}\\
-\includegraphics[width = 5.5cm, trim= 0 0 180 0, clip=true]{fr_overview_files/figure-beamer/ausmap-1.pdf}\\[-0.4cm]
+\includegraphics[width = 5.5cm, trim= 0 0 180 0, clip=true]{figs/aus_map}\\[-0.4cm]
 \faTimes\\
 \textbf{Purpose of travel}\\
 {\fontsize{11}{12}\sf Holiday, Visiting friends \& relatives, Business, Other}

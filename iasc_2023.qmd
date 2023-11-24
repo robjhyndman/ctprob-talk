@@ -36,17 +36,17 @@ source("setup.R")
 
 \placefig{0}{1.1}{height=8.3cm, width=20cm}{IJFcover}
 
-\begin{textblock}{8}(7, 1.2)\fontsize{13}{14}\sf
-\begin{itemize}\tightlist
+\begin{textblock}{9.2}(6.3, 1.2)\fontsize{13}{14}\sf
+\begin{itemize}\parskip=0.1cm
 \item Girolimetto, Athanasopoulos, Di~Fonzo, Hyndman (2024)
 ``Cross-temporal probabilistic forecast reconciliation: Methodological and practical issues''.
 \item Preprint at \texttt{\href{https://robjhyndman.com/ctprob}{robjhyndman.com/ctprob}}
 \end{itemize}
 \end{textblock}
 
-\placefig{7}{6.2}{trim = 0 40 0 0, clip=TRUE, width=10cm, height=2.9cm}{danielegiro}
-\placefig{10}{6.2}{trim = 0 40 0 0, clip=TRUE, width=10cm, height=2.9cm}{george}
-\placefig{13}{6.2}{trim = 0 0 0 30, clip=TRUE, width=10cm, height=2.9cm}{tommy}
+\placefig{6.1}{5.}{trim = 0 40 0 0, clip=TRUE, width=10cm, height=4.1cm}{danielegiro}
+\placefig{9.4}{5.}{trim = 0 40 0 0, clip=TRUE, width=10cm, height=4.1cm}{george}
+\placefig{12.7}{5.}{trim = 0 0 0 30, clip=TRUE, width=10cm, height=4.1cm}{tommy}
 
 # Australian tourism forecasting
 
@@ -107,7 +107,7 @@ p1 <- tourism |>
   summarise(visitors = sum(visitors)) |>
   autoplot(visitors) +
   ylab("Overnight trips") + xlab("Month") +
-  scale_y_log10() +
+  #scale_y_log10() +
   ggtitle("Total domestic travel: Australia")
 p2 <- tourism |>
   group_by(state) |>
@@ -136,14 +136,14 @@ p3 <- tourism |>
   mutate(zone = paste0("NSW/", zone)) |>
   autoplot(visitors) +
   ylab("Overnight trips") + xlab("Month") +
-  scale_y_log10() +
+  #scale_y_log10() +
   ggtitle("Total domestic travel: NSW by zone") +
   guides(colour = guide_legend(title = "state/zone"))
 p4 <- tourism |>
   filter(zone == "South NSW") |>
   autoplot(visitors) +
   ylab("Overnight trips") + xlab("Month") +
-  scale_y_log10() +
+  #scale_y_log10() +
   ggtitle("Total domestic travel: South NSW by region")
 
 
@@ -157,16 +157,14 @@ for (i in seq(4)) {
 p1_m <- tourism |>
   summarise(visitors = sum(visitors)/1e3) |>
   autoplot(visitors) +
-  xlab("Month") + ylab("") +
-  scale_y_log10()
+  xlab("Month") + ylab("")
 p1_q <- tourism |>
   summarise(visitors = sum(visitors)/1e3) |>
   mutate(Quarter = yearquarter(month)) |>
   index_by(Quarter) |>
   summarise(visitors = sum(visitors)) |>
   autoplot(visitors) +
-  ylab("Overnight trips (thousands)") + xlab("Quarter") +
-  scale_y_log10()
+  ylab("Overnight trips (thousands)") + xlab("Quarter")
 p1_y <- tourism |>
   summarise(visitors = sum(visitors)/1e3) |>
   mutate(Year = year(month)) |>
@@ -174,11 +172,40 @@ p1_y <- tourism |>
   summarise(visitors = sum(visitors)) |>
   autoplot(visitors) +
   xlab("Year") + ylab("") +
-  scale_y_log10() +
+  ggtitle("Total domestic travel: South NSW") +
+  xlim(1998,2017.8)
+
+
+cairo_pdf("./figs/tourism5.pdf", width = 12 * .8, height = 6 * .8)
+print(p1_y / p1_q / p1_m)
+crop::dev.off.crop()
+
+p1_m <- tourism |>
+  filter(zone == "South NSW") |>
+  summarise(visitors = sum(visitors)/1e3) |>
+  autoplot(visitors) +
+  xlab("Month") + ylab("")
+p1_q <- tourism |>
+  filter(zone == "South NSW") |>
+  summarise(visitors = sum(visitors)/1e3) |>
+  mutate(Quarter = yearquarter(month)) |>
+  index_by(Quarter) |>
+  summarise(visitors = sum(visitors)) |>
+  autoplot(visitors) +
+  ylab("Overnight trips (thousands)") + xlab("Quarter")
+p1_y <- tourism |>
+  filter(zone == "South NSW") |>
+  summarise(visitors = sum(visitors)/1e3) |>
+  mutate(Year = year(month)) |>
+  index_by(Year) |>
+  summarise(visitors = sum(visitors)) |>
+  autoplot(visitors) +
+  xlab("Year") + ylab("") +
+  #scale_y_log10() +
   ggtitle("Total domestic travel: Australia") +
   xlim(1998,2017.8)
 
-cairo_pdf("./figs/tourism5.pdf", width = 12 * .8, height = 6 * .8)
+cairo_pdf("./figs/tourism6.pdf", width = 12 * .8, height = 6 * .8)
 print(p1_y / p1_q / p1_m)
 crop::dev.off.crop()
 ```
@@ -188,78 +215,9 @@ crop::dev.off.crop()
 \only<3>{\placefig{0.1}{1.4}{width=15.8cm}{tourism3}}
 \only<4>{\placefig{0.1}{1.4}{width=15.8cm}{tourism4}}
 \only<5>{\placefig{0.1}{1.3}{width=15.8cm}{tourism5}}
+\only<6>{\placefig{0.1}{1.3}{width=15.8cm}{tourism6}}
 
-# Cross-temporal aggregation constraints
-
-## Coherent cross-temporal forecasts
-
-\alert{What we want}
-
-* We want forecasts of all series at all levels of cross-sectional aggregation.
-* We want forecasts at monthly, quarterly, annual and other temporal aggregations.
-* We want "coherent" probabilistic forecasts.
-
-\alert{Solution}
-
-* We model and forecast all series independently.
-* We "reconcile" the forecasts to make them coherent.
-
-## Notation
-\fontsize{14}{15}\sf
-
-\begin{textblock}{8.8}(0.2,1.5)
-\centerline{\colorbox[RGB]{210,210,210}{$\bY_{t}=\color{blue}\bS\color{red}\bm{b}_{t}$}}
-\begin{itemize}\parskip=0cm\itemsep=0cm
-\item $\by_t=$ vector of all series at time $t$
-\item $\color{red}{\bm{b}_t}=$ vector of most disaggregated series at time $t$
-\item $\color{blue}{\bS}=$ ``structural matrix'' containing the linear constraints.\\[1cm]
-\item $\bS_{cs}=$ cross-sectional aggregations.
-\item $\bS_{te}=$ temporal aggregations.
-\item $\bS_{ct} = \bS_{cs} \otimes \bS_{te}$.
-\end{itemize}
-\end{textblock}
-
-\begin{textblock}{5.7}(11.4,0.1)
-\begin{minipage}{4cm}
-\begin{block}{}\centering
-\begin{tikzpicture}
-\tikzstyle{every node}=[ellipse,draw,fill=red!15,inner sep=2pt]
-\tikzstyle[level distance=.3cm]
-\tikzstyle[sibling distance=12cm]
-\tikzstyle{level 1}=[sibling distance=10mm,font=\small,set style={{every node}+=[fill=blue!15]}]
-\node{Total}[edge from parent fork down]
- child {node {A}
- }
- child {node {B}
- }
- child {node {C}
- };
-\end{tikzpicture}
-\end{block}
-\end{minipage}
-\end{textblock}
-
-\begin{textblock}{5.7}(9.4,2.7)\fontsize{14}{15}\sf
-\begin{align*}
-\bY_{t}&= \begin{pmatrix}
-  y_{\text{Total},t}\\
-  y_{A,t}\\
-  y_{B,t}\\
-  y_{C,t}
-  \end{pmatrix}  \\
-  &= {\color{blue}\underbrace{\begin{pmatrix}
-                1 & 1 & 1 \\
-                1 & 0 & 0 \\
-                0 & 1 & 0\\
-                0 & 0 & 1
-                \end{pmatrix}}_{\bS}}
-     {\color{red}\underbrace{\begin{pmatrix}
-       y_{A,t}\\y_{B,t}\\y_{C,t}
-       \end{pmatrix}}_{\bm{b}_{t}}}
-\end{align*}
-\end{textblock}
-
-## Temporal constraints: monthly data
+## Temporal aggregations: monthly data
 
 \only<1>{\begin{tikzpicture}
   \tikzstyle{every node}=[ellipse,draw,inner sep=0.2pt,fill=red!15,font=\small]
@@ -334,10 +292,107 @@ crop::dev.off.crop()
     };
 \end{tikzpicture}}\pause
 
-## Temporal constraints: monthly data
-\fontsize{11}{11}\sf
+## Australian tourism data
 
-$$
+* national total
+* 7 states & territories
+* 21 zones
+* 76 regions
+* 4 purposes of travel (Business, Holidays, Visiting, Other)
+* temporally aggregated into 2-month, 3-month, 4-month, 6-month and 12-month periods.
+
+Most disaggregated series: $76 \times 4 = 304$ monthly series.
+
+Total series: $(1 + 7 + 21 + 76) \times (1+4) \times 6 = 3150$ series.
+
+
+# Cross-temporal aggregation constraints
+
+## Coherent cross-temporal forecasts
+
+\alert{What we want}
+
+* We want forecasts of all series at all levels of cross-sectional aggregation.
+* We want forecasts at monthly, quarterly, annual and other temporal aggregations.
+* We want "coherent" probabilistic forecasts.
+
+\alert{Solution}
+
+* We model and forecast all series independently.
+* We "reconcile" the forecasts to make them coherent.
+
+## Notation
+\fontsize{14}{15}\sf
+
+\begin{textblock}{8.8}(0.2,1.5)
+\centerline{\colorbox[RGB]{210,210,210}{$\bY_{t}=\color{blue}\bS\color{red}\bm{b}_{t}$}}
+\begin{itemize}\tightlist
+\item $\by_t=$ vector of all series at time $t$
+\item $\color{red}{\bm{b}_t}=$ vector of most disaggregated series at time $t$
+\item $\color{blue}{\bS}=$ ``structural matrix'' containing the linear constraints.
+\end{itemize}
+\end{textblock}
+
+\only<2>{\begin{textblock}{11.8}(0.2,6.3)
+\begin{itemize}\tightlist
+\item $\bS_{cs}=$ cross-sectional aggregations.
+\item $\bS_{te}=$ temporal aggregations.
+\item $\bS_{ct} = \bS_{cs} \otimes \bS_{te}$\\
+\hspace*{0.58cm} $=$ all cross-temporal aggregations.
+\end{itemize}
+\end{textblock}}
+
+\begin{textblock}{5.7}(11.4,0.1)
+\begin{minipage}{4cm}
+\begin{block}{}\centering
+\begin{tikzpicture}
+\tikzstyle{every node}=[ellipse,draw,fill=red!15,inner sep=2pt]
+\tikzstyle[level distance=.3cm]
+\tikzstyle[sibling distance=12cm]
+\tikzstyle{level 1}=[sibling distance=10mm,font=\small,set style={{every node}+=[fill=blue!15]}]
+\node{Total}[edge from parent fork down]
+ child {node {A}
+ }
+ child {node {B}
+ }
+ child {node {C}
+ };
+\end{tikzpicture}
+\end{block}
+\end{minipage}
+\end{textblock}
+
+\begin{textblock}{5.7}(9.4,2.7)\fontsize{14}{15}\sf
+\begin{align*}
+\bY_{t}&= \begin{pmatrix}
+  y_{\text{Total},t}\\
+  y_{A,t}\\
+  y_{B,t}\\
+  y_{C,t}
+  \end{pmatrix}  \\
+  &= {\color{blue}\underbrace{\begin{pmatrix}
+                1 & 1 & 1 \\
+                1 & 0 & 0 \\
+                0 & 1 & 0\\
+                0 & 0 & 1
+                \end{pmatrix}}_{\bS}}
+     {\color{red}\underbrace{\begin{pmatrix}
+       y_{A,t}\\y_{B,t}\\y_{C,t}
+       \end{pmatrix}}_{\bm{b}_{t}}}
+\end{align*}
+\end{textblock}
+
+## Temporal constraints: monthly data
+\fontsize{12}{11}\sf
+
+If $y_1,\dots,y_T$ observed at frequency $m$, and $k$ is a factor of $m$, let:
+
+* $x_j^{[k]} =$ sum of $k$ consecutive observations from time $(j-1)k+1$.
+* $\bm{x}_\tau^{[k]} = (x_{\tau}^{[k]},\dots,x_{\tau+m/k-1}^{[k]})'$.
+
+\vspace*{0.3cm}\pause
+
+\centerline{$\displaystyle
   \bm{y}_\tau=\begin{bmatrix}
     x_{\tau}^{[12]}     \\[0.2cm]
     \bm{x}_{\tau}^{[6]} \\[0.2cm]
@@ -346,7 +401,7 @@ $$
     \bm{x}_\tau^{[2]}   \\[0.2cm]
     \bm{x}_\tau^{[1]}
   \end{bmatrix}
-  \qquad
+  \quad
   \bm{S}_{te} = \begin{bmatrix}
     1                & 1 & 1 & 1 & 1~~~1~~~1~~~1 & 1 & 1 & 1 & 1 \\
     1                & 1 & 1 & 1 & 1~~~1~~~0~~~0 & 0 & 0 & 0 & 0 \\
@@ -356,13 +411,10 @@ $$
     0                & 0 & 0 & 0 & 0~~~0~~~0~~~0 & 1 & 1 & 1 & 1 \\
     1                & 1 & 1 & 0 & 0~~~0~~~0~~~0 & 0 & 0 & 0 & 0 \\
                      &   &   &   & \vdots        &   &   &   &   \\
-    0                & 0 & 0 & 0 & 0~~~0~~~0~~~0 & 0 & 1 & 1 & 1 \\
-    1                & 1 & 0 & 0 & 0~~~0~~~0~~~0 & 0 & 0 & 0 & 0 \\
-                     &   &   &   & \vdots        &   &   &   &   \\
     0                & 0 & 0 & 0 & 0~~~0~~~0~~~0 & 0 & 0 & 1 & 1 \\[0.2cm]
     \phantom{\vdots} &   &   &   & \bm{I}_{12}   &   &   &   &
   \end{bmatrix}
-  \qquad
+  \quad
   \bm{b}_\tau = \bm{x}_{\tau}^{[1]} =
   \begin{bmatrix}
    y_{12\tau -11} \\
@@ -370,7 +422,7 @@ $$
     \vdots        \\
     y_{12\tau}
     \end{bmatrix}
-$$
+$}
 
 
 # Optimal linear forecast reconciliation
@@ -417,12 +469,12 @@ Wickramasuriya et al (2019)
 \centerline{$\displaystyle\textcolor{red}{\tilde{\by}_{T+h|T}}
 = \bm{M} ~ \textcolor{blue}{\hat{\by}_{T+h|T}}$}
 \end{block}\vspace*{-0.2cm}
-\centerline{\hspace*{1.4cm}\textcolor{red}{Reconciled forecasts}\hfill\textcolor{blue}{Base forecasts}\hspace*{2.9cm}}\vspace*{-0.2cm}
-
-* $\bm{W}_h = \var[\by_{T+h} - \hat{\by}_{T+h|T} \mid \by_1,\dots,\by_T]$.
-* $\bm{V}_h = \var[\by_{T+h} - \tilde{\by}_{T+h|T}  \mid \by_1,\dots,\by_T])  = \bm{M}\bm{W}_h\bm{M}'$.
-
-\begin{alertblock}{Minimum trace (MinT) reconciliation}
+\centerline{\hspace*{1.4cm}\textcolor{red}{Reconciled forecasts}\hfill\textcolor{blue}{Base forecasts}\hspace*{2.9cm}}\vspace*{-1.1cm}
+\begin{align*}
+\bm{W}_h &= \var[\by_{T+h} - \hat{\by}_{T+h|T} \mid \by_1,\dots,\by_T]\\
+\bm{V}_h &= \var[\by_{T+h} - \tilde{\by}_{T+h|T}  \mid \by_1,\dots,\by_T]  = \bm{M}\bm{W}_h\bm{M}'
+\end{align*}
+\vspace*{-0.8cm}\begin{alertblock}{Minimum trace (MinT) reconciliation}
 If $\bm{M}$ is a projection, then trace of $\bm{V}_h$ is minimized when
 \centerline{$\bm{M} = \bS(\bS'\bm{W}_h^{-1}\bS)^{-1}\bS'\bm{W}_h^{-1}$}
 \end{alertblock}\vspace*{-0.2cm}
@@ -453,10 +505,7 @@ A probability triple $(\mathfrak{s}, \mathscr{F}_{\mathfrak{s}}, \breve{\nu})$ i
 \input figs/probforerec_schematic.tex
 }
 \end{textblock}
-\begin{textblock}{7}(9.5,7.5)
-\centerline{$\psi = s \circ g$}
-\end{textblock}
-\begin{textblock}{13.2}(0.2,7.9)
+\begin{textblock}{13.2}(1.2,7.9)
 \begin{block}{}\fontsize{12}{12}\sf
 \citet{coherentprob,CorEtAl2022}
 \end{block}
@@ -709,7 +758,7 @@ The ``year'' can start in any quarter, giving overlapping blocks.
 \begin{textblock}{10}(6.1,1)
 \fontsize{11}{14}\sf\tabcolsep=0.12cm
 \begin{itemize}
-\item \textbf{Grouped ts}\newline (geographical divisions $\times$ purpose of travel)
+\item \textbf{Cross-sectional aggregations}\newline (geographical divisions $\times$ purpose of travel)
 
 \begin{tabular}{lccccc}
 \toprule
@@ -721,9 +770,8 @@ The ``year'' can start in any quarter, giving overlapping blocks.
   \textbf{total} & 5 & 35 & 105 & 380 & \textbf{525}\\
   \bottomrule
 \end{tabular}
-\centerline{{\color{newblue}$n_a = 221$}, {\color{avocado}$n_b = 304$}, and $\textbf{n = 525}$}
 
-\item \textbf{Temporal framework}, frequencies:\\[0.2cm]
+\item \textbf{Temporal aggregations}, frequencies:\\[0.2cm]
 \begin{multicols}{2}
   \begin{itemize}\tightlist
   \item Monthly
@@ -751,39 +799,22 @@ The ``year'' can start in any quarter, giving overlapping blocks.
 
 * Automatic ETS forecasts on log-transformed data
 
-## Monthly Australian Tourism Demand
-
-\alert{Reconciliation approaches}\fontsize{13}{14}\sf
-
-* Cross-temporal \textbf{\color{newblue}{bottom-up}} and \textbf{\color{newblue}{partly bottom-up}}
-
-  \begin{tabular}{M{0.24\linewidth}|M{0.24\linewidth}|M{0.24\linewidth}}
-  ct$(bu)$ & ct$(shr_{cs}, bu_{te})$ & ct$(wlsv_{te}, bu_{cs})$
-  \end{tabular}
-
-* Optimal forecast reconciliation with \textbf{\color{newblue}{one-step residuals}}
-
-    \begin{tabular}{M{0.24\linewidth}|M{0.24\linewidth}|M{0.24\linewidth}|M{0.24\linewidth}}
-    oct$(ols)$ & oct$(struc)$ & oct$(wlsv)$ & oct$(bdshr)$
-    \end{tabular}
-
-* Optimal forecast reconciliation with \textbf{\color{newblue}{multi-step residuals}}
-
-    \begin{tabular}{M{0.24\linewidth}|M{0.24\linewidth}|M{0.24\linewidth}|M{0.24\linewidth}}
-    oct$_h(hbshr)$ & oct$_h(bshr)$ & oct$_h(hshr)$ & oct$_h(shr)$
-    \end{tabular}
 
 ## Monthly Australian tourism data -- CRPS skill scores
 \fontsize{12}{13}\sf\vspace*{0.2cm}
 
-\centerline{\textcolor{red}{Worse than benchmark}\qquad \textbf{Best}}
+\begin{textblock}{4.5}(2.5,4.2)
+Reconciliation using different covariance matrix ($\bm{W}_h$) estimates
+\end{textblock}
 
-\centering
-\footnotesize
-\begin{tabular}[t]{lrr}
+\rightline{\textcolor{red}{Worse than benchmark}\qquad \textbf{Best}}
+
+\rightline{\footnotesize
+\begin{tabular}[t]{@{}lrr@{}}
 & \textbf{$\forall k \in \{12,6,4,3,2,1\}$} & \textbf{$k = 1$}\\
 \midrule
 base                      & \cellcolor{LightOrange!30} {1.000}  & \cellcolor{LightOrange!30} {1.000} \\
+\midrule
 ct$(bu)$                  & \textcolor{red}{1.321}              & \textcolor{red}{1.077} \\
 ct$(shr_{cs}, bu_{te})$   & \textcolor{red}{1.057}              & {0.976} \\
 ct$(wlsv_{te}, bu_{cs})$  & \textcolor{red}{1.062}              & {0.976}\\
@@ -795,11 +826,11 @@ oct$_h(hbshr)$            & {0.989}                             & {0.982} \\
 oct$_h(bshr)$             & {0.994}                             & {0.988}\\
 oct$_h(hshr)$             & {\textbf{0.969}}                    & {0.953}\\
 oct$_h(shr)$              & \textcolor{red}{1.007}              & \textcolor{red}{1.000}
-\end{tabular}
+\end{tabular}}
 
 # Final comments
 
-## Software
+## Forecast reconciliation software
 \fontsize{11}{12}\sf\vspace*{0.3cm}
 
 \hspace*{-0.6cm}\begin{tabular}{llP{1.7cm}cP{1.7cm}c}

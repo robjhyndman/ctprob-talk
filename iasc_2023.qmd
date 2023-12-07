@@ -172,7 +172,7 @@ p1_y <- tourism |>
   summarise(visitors = sum(visitors)) |>
   autoplot(visitors) +
   xlab("Year") + ylab("") +
-  ggtitle("Total domestic travel: South NSW") +
+  ggtitle("Total domestic travel: Australia") +
   xlim(1998,2017.8)
 
 
@@ -202,7 +202,7 @@ p1_y <- tourism |>
   autoplot(visitors) +
   xlab("Year") + ylab("") +
   #scale_y_log10() +
-  ggtitle("Total domestic travel: Australia") +
+  ggtitle("Total domestic travel: South NSW") +
   xlim(1998,2017.8)
 
 cairo_pdf("./figs/tourism6.pdf", width = 12 * .8, height = 6 * .8)
@@ -312,9 +312,9 @@ Total series: $(1 + 7 + 21 + 76) \times (1+4) \times 6 = 3150$ series.
 
 \alert{What we want}
 
-* We want forecasts of all series at all levels of cross-sectional aggregation.
-* We want forecasts at monthly, quarterly, annual and other temporal aggregations.
-* We want "coherent" probabilistic forecasts.
+* forecasts of all series at all levels of cross-sectional aggregation.
+* forecasts at monthly, quarterly, annual and other temporal aggregations.
+* "coherent" probabilistic forecasts.
 
 \alert{Solution}
 
